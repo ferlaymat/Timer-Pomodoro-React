@@ -6,3 +6,8 @@ export const modeColor: Record<Mode, string> = {
   long: "#fa360f",
   conf: "#cecece",
 };
+
+export type DurationConfig = {
+  label: string;
+  mode: Mode;
+};

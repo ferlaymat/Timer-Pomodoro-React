@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import Controls from "./controls/Controls";
 import ModeTab from "./mode_tab/ModeTab";
 import type { Mode } from "./shared/model/Types";
-import TimerDisplay from "./timer_display/TimerDisplay";
-import StatePanel from "./stats/StatePanel";
+import TimerView from "./view/TimerView";
+import Config from "./configurator/Config";
 
 const TimerPomodoro = () => {
   const [remaining, setRemaining] = useState<number>(630);
@@ -75,10 +74,10 @@ const TimerPomodoro = () => {
         setPauseRemaining((prev) => prev - 1);
       }, 1000);
     } else if (isPaused && pauseRemaining === 0) {
-      // Pause terminée → reprise
+      // restart after the pause
       setIsPaused(false);
-      setRemaining(savedRemaining); // Restaure le temps
-      setIsRunning(true); // Redémarre
+      setRemaining(savedRemaining); // Restore previous time
+      setIsRunning(true); // restart timer
       setMode("pom");
     }
 
@@ -89,14 +88,20 @@ const TimerPomodoro = () => {
     <div>
       <h1>Timer Pomodoro</h1>
       <ModeTab onChangeMode={changeMode} />
-      <TimerDisplay
-        remaining={remaining}
-        total={630}
-        mode={mode as Mode}
-        timer={pauseRemaining}
-      />
-      <Controls onReset={reset} onStart={start} onSkip={skip} />
-      <StatePanel completed={completed} />
+      {mode === "conf" ? (
+        <Config />
+      ) : (
+        <TimerView
+          remaining={remaining}
+          total={630}
+          mode={mode as Mode}
+          timer={pauseRemaining}
+          onReset={reset}
+          onStart={start}
+          onSkip={skip}
+          completed={completed}
+        />
+      )}
     </div>
   );
 };
