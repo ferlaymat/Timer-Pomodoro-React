@@ -1,7 +1,7 @@
-type Props = {
-  remaining: number;
-};
-function TimeLabel({ remaining }: Props) {
+import { userTimerContext } from "../context/TimerContext";
+
+function TimeLabel() {
+  let remaining = userTimerContext().state.remaining;
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 

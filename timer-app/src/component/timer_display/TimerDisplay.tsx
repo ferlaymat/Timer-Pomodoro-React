@@ -1,15 +1,16 @@
-import { modeColor, type Mode } from "../shared/model/Types";
+import { userTimerContext } from "../context/TimerContext";
+import { modeColor } from "../shared/model/Types";
 import ProgressRing from "./ProgressRing";
 import TimeLabel from "./TimeLabel";
 
 type Props = {
-  remaining: number;
   total: number;
-  mode: Mode;
-  timer: number | null;
 };
 
-function TimerDisplay({ remaining, total, mode, timer }: Props) {
+function TimerDisplay({ total }: Props) {
+  let remaining = userTimerContext().state.remaining;
+  let mode = userTimerContext().state.mode;
+  let timer = userTimerContext().state.pauseRemaining;
   const progress = remaining / total;
 
   return (
@@ -20,7 +21,7 @@ function TimerDisplay({ remaining, total, mode, timer }: Props) {
         size={180}
         timer={timer}
       />
-      <TimeLabel remaining={remaining} />
+      <TimeLabel />
     </div>
   );
 }
