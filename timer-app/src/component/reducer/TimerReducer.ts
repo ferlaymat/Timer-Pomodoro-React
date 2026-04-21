@@ -3,7 +3,7 @@ import type { TimerAction, TimerState } from "../shared/model/Types";
 const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
   switch (action.type) {
     case "START":
-      if (state.remaining === 630 && !state.isRunning) {
+      if (state.remaining === state.total && !state.isRunning) {
         return { ...state, isRunning: true };
       }
       return state;
@@ -13,7 +13,7 @@ const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
         return {
           ...state,
           isRunning: false,
-          remaining: 630,
+          remaining: state.total,
           completed: state.completed + 1,
         };
       }
@@ -23,7 +23,7 @@ const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
       return {
         ...state,
         isRunning: false,
-        remaining: 630,
+        remaining: state.total,
       };
 
     case "CHANGE_MODE":
@@ -38,10 +38,10 @@ const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
           isRunning: false,
           savedRemaining: state.remaining,
           isPaused: true,
-          pauseRemaining: 10,
+          pauseRemaining: state.config[action.payload] * 60,
         };
       }
-      return newState;
+      return state;
 
     case "TICK":
       if (action.target === "timer") {
@@ -55,7 +55,7 @@ const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
         return {
           ...state,
           isRunning: false,
-          remaining: 630,
+          remaining: state.total,
           completed: state.completed + 1,
         };
       }
@@ -70,6 +70,14 @@ const TimerReducer = (state: TimerState, action: TimerAction): TimerState => {
         mode: "pom",
       };
 
+    case "UPDATE_CONFIG":
+      const newConfig = { ...state.config, ...action.payload };
+      return {
+        ...state,
+        config: newConfig,
+        total: newConfig.pom * 60,
+        remaining: newConfig.pom * 60,
+      };
     default:
       return state;
   }

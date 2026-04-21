@@ -1,8 +1,7 @@
-interface Props {
-  completed: number;
-}
+import { userTimerContext } from "../context/TimerContext";
 
-function StatePanel({ completed }: Props) {
+function StatePanel() {
+  let completed = userTimerContext().state.completed;
   return <div>{completed}</div>;
 }
 

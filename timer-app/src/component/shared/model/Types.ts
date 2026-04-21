@@ -10,9 +10,17 @@ export const modeColor: Record<Mode, string> = {
 export type DurationConfig = {
   label: string;
   mode: Mode;
+  duration: number;
+};
+
+export type TimerConfig = {
+  pom: number;
+  short: number;
+  long: number;
 };
 
 export type TimerState = {
+  total: number;
   remaining: number;
   isRunning: boolean;
   completed: number;
@@ -20,6 +28,7 @@ export type TimerState = {
   savedRemaining: number;
   pauseRemaining: number;
   mode: Mode;
+  config: TimerConfig;
 };
 
 export type TimerAction =
@@ -29,4 +38,5 @@ export type TimerAction =
   | { type: "CHANGE_MODE"; payload: Mode }
   | { type: "TICK"; target: "timer" | "pause" }
   | { type: "TIMER_COMPLETE" }
-  | { type: "PAUSE_COMPLETE" };
+  | { type: "PAUSE_COMPLETE" }
+  | { type: "UPDATE_CONFIG"; payload: Partial<TimerConfig> };

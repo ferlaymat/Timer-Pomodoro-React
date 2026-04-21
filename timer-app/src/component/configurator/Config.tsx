@@ -1,11 +1,47 @@
-import type { DurationConfig } from "../shared/model/Types";
+import { userTimerContext } from "../context/TimerContext";
+import type { DurationConfig, Mode, TimerConfig } from "../shared/model/Types";
 
 function Config() {
   const durations: DurationConfig[] = [
-    { label: "Pomodoro", mode: "pom" },
-    { label: "Short", mode: "short" },
-    { label: "Long", mode: "long" },
+    { label: "Pomodoro", mode: "pom", duration: 25 },
+    { label: "Short", mode: "short", duration: 5 },
+    { label: "Long", mode: "long", duration: 10 },
   ];
+
+  const { state, dispatch } = userTimerContext();
+
+  const getDurationForMode = (mode: Mode, config: TimerConfig): number => {
+    switch (mode) {
+      case "pom":
+        return config.pom;
+      case "short":
+        return config.short;
+      case "long":
+        return config.long;
+      default:
+        return config.pom;
+    }
+  };
+
+  const handleDecrease = (mode: Mode) => {
+    const currentDuration = getDurationForMode(mode, state.config);
+    if (currentDuration > 1) {
+      dispatch({
+        type: "UPDATE_CONFIG",
+        payload: { [mode]: currentDuration - 1 },
+      });
+    }
+  };
+
+  const handleIncrease = (mode: Mode) => {
+    const currentDuration = getDurationForMode(mode, state.config);
+    if (currentDuration < 60) {
+      dispatch({
+        type: "UPDATE_CONFIG",
+        payload: { [mode]: currentDuration + 1 },
+      });
+    }
+  };
 
   return (
     <div className="config-container">
@@ -15,7 +51,11 @@ function Config() {
           <div key={duration.mode} className="duration-item">
             <label className="duration-label">{duration.label}</label>
             <div className="duration-controls">
-              <button type="button" className="btn-decrease">
+              <button
+                type="button"
+                className="btn-decrease"
+                onClick={() => handleDecrease(duration.mode)}
+              >
                 −
               </button>
               <input
@@ -24,9 +64,13 @@ function Config() {
                 min="1"
                 max="60"
                 className="duration-input"
-                readOnly
+                value={getDurationForMode(duration.mode, state.config)}
               />
-              <button type="button" className="btn-increase">
+              <button
+                type="button"
+                className="btn-increase"
+                onClick={() => handleIncrease(duration.mode)}
+              >
                 +
               </button>
             </div>

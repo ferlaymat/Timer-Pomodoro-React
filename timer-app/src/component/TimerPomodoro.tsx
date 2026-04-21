@@ -1,20 +1,28 @@
 import { useEffect, useMemo, useReducer } from "react";
 import ModeTab from "./mode_tab/ModeTab";
-import type { Mode, TimerState } from "./shared/model/Types";
+import type { Mode, TimerConfig, TimerState } from "./shared/model/Types";
 import TimerView from "./view/TimerView";
 import Config from "./configurator/Config";
 import { TimerContext } from "./context/TimerContext";
 import TimerReducer from "./reducer/TimerReducer";
 
 function TimerPomodoro() {
+  const initialConfig: TimerConfig = {
+    pom: 25,
+    short: 5,
+    long: 10,
+  };
+
   const initialState: TimerState = {
-    remaining: 630,
+    total: initialConfig.pom * 60,
+    remaining: initialConfig.pom * 60,
     isRunning: false,
     completed: 0,
     isPaused: false,
     savedRemaining: 0,
     pauseRemaining: 0,
     mode: "pom",
+    config: initialConfig,
   };
   const [state, dispatch] = useReducer(TimerReducer, initialState);
   const value = useMemo(() => ({ state, dispatch }), [state]);
@@ -68,8 +76,6 @@ function TimerPomodoro() {
           <Config />
         ) : (
           <TimerView
-            total={630}
-            completed={state.completed}
             onReset={() => dispatch({ type: "RESET" })}
             onStart={() => dispatch({ type: "START" })}
             onSkip={() => dispatch({ type: "SKIP" })}
