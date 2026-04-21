@@ -1,74 +1,89 @@
-import { useEffect, useState } from "react";
-import Controls from "./controls/Controls";
+import { useEffect, useMemo, useReducer } from "react";
 import ModeTab from "./mode_tab/ModeTab";
-import type { Mode } from "./shared/model/Types";
-import TimerDisplay from "./timer_display/TimerDisplay";
-import StatePanel from "./stats/StatePanel";
+import type { Mode, TimerConfig, TimerState } from "./shared/model/Types";
+import TimerView from "./view/TimerView";
+import Config from "./configurator/Config";
+import { TimerContext } from "./context/TimerContext";
+import TimerReducer from "./reducer/TimerReducer";
 
-const TimerPomodoro = () => {
-  const [remaining, setRemaining] = useState<number>(630);
-  const [isRunning, setIsRunning] = useState(false);
-  const [completed, setCompleted] = useState(0);
-  const start = () => {
-    if (!isRunning && remaining === 630) {
-      setIsRunning(true);
-    }
+function TimerPomodoro() {
+  const initialConfig: TimerConfig = {
+    pom: 25,
+    short: 5,
+    long: 10,
   };
 
-  const skip = () => {
-    if (isRunning && remaining > 0) {
-      setIsRunning(false);
-      setRemaining(630);
-      setCompleted((prev: number) => {
-        return prev + 1;
-      });
-    }
+  const initialState: TimerState = {
+    total: initialConfig.pom * 60,
+    remaining: initialConfig.pom * 60,
+    isRunning: false,
+    completed: 0,
+    isPaused: false,
+    savedRemaining: 0,
+    pauseRemaining: 0,
+    mode: "pom",
+    config: initialConfig,
   };
+  const [state, dispatch] = useReducer(TimerReducer, initialState);
+  const value = useMemo(() => ({ state, dispatch }), [state]);
 
-  const reset = () => {
-    setIsRunning(false);
-    setRemaining(630);
-  };
-
-  const [mode, setMode] = useState("pom");
   const changeMode = (mode: Mode) => {
-    setMode(() => {
-      return mode;
-    });
+    dispatch({ type: "CHANGE_MODE", payload: mode });
   };
 
   //manage timer when start method is called
   useEffect(() => {
     let interval: number;
 
-    if (isRunning && remaining > 0) {
+    if (state.isRunning && state.remaining > 0) {
       interval = setInterval(() => {
         //change value then wait 1sec
         //as the value interval has changed, the effect is recalled
-        setRemaining((prev) => prev - 1);
+        dispatch({ type: "TICK", target: "timer" });
       }, 1000);
     }
     return () => clearInterval(interval); // Cleanup
-  }, [isRunning, remaining]);
+  }, [state.isRunning, state.remaining]);
 
   //manage timer when remaining is finished
   useEffect(() => {
-    if (isRunning && remaining === 0) {
-      setIsRunning(false);
-      setRemaining(630);
-      setCompleted((prev) => prev + 1);
+    dispatch({ type: "TIMER_COMPLETE" });
+  }, [state.isRunning, state.remaining]);
+
+  useEffect(() => {
+    let interval: number;
+
+    if (state.isPaused && state.pauseRemaining > 0) {
+      interval = setInterval(() => {
+        dispatch({ type: "TICK", target: "pause" });
+      }, 1000);
+    } else if (state.isPaused && state.pauseRemaining === 0) {
+      // restart after the pause
+      dispatch({ type: "PAUSE_COMPLETE" });
     }
-  }, [isRunning, remaining]);
+
+    return () => clearInterval(interval);
+  }, [state.isPaused, state.pauseRemaining]);
 
   return (
-    <div>
-      <h1>Timer Pomodoro</h1>
-      <ModeTab onChangeMode={changeMode} />
-      <TimerDisplay remaining={remaining} total={630} mode={mode as Mode} />
-      <Controls onReset={reset} onStart={start} onSkip={skip} />
-      <StatePanel completed={completed} />
-    </div>
+    <>
+      {/* Timer context allow to avoid  to prop drill. Children can access
+      them by useContextTimer function */}
+      <TimerContext.Provider value={value}>
+        <h1>Timer Pomodoro</h1>
+        <ModeTab onChangeMode={changeMode} />
+        {state.mode === "conf" ? (
+          <Config />
+        ) : (
+          <TimerView
+            onReset={() => dispatch({ type: "RESET" })}
+            onStart={() => dispatch({ type: "START" })}
+            onSkip={() => dispatch({ type: "SKIP" })}
+          />
+        )}
+      </TimerContext.Provider>
+    </>
   );
-};
+}
 
 export default TimerPomodoro;
